@@ -48,9 +48,18 @@ pip install wandb IPython matplotlib
 
 ---
 
-## Data Preparation
+## 数据准备部分
 
-You can directly use /data.
+我们可以直接使用 data 文件夹下面的数据进行处理。
+
+## 调试模式
+1. 将 ray 设置为本地模式，将ray的初始化代码中添加 `local_mode=True`，开启本地模式。
+``` python
+ray.init(runtime_env={'env_vars': {'TOKENIZERS_PARALLELISM': 'true', 'NCCL_DEBUG': 'WARN'}}, local_mode=True)
+```
+
+2. 将 vs code中调试参数开启 `justMyCode=False`，使用vs code调试代码时可以进入到安装包中进行调试
+
 
 For your own data generation, here's a demo:
 

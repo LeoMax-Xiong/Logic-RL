@@ -1,10 +1,10 @@
 set -x
-MODEL_PATH=xxx
+MODEL_PATH="/mnt/g/task/model/Qwen2.5-0.5B-Instruct"
 export VLLM_ATTENTION_BACKEND=XFORMERS
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
-    data.train_files=data/xxx \
-    data.val_files=dataxxx \
+    data.train_files=data/kk/instruct/4ppl/train.parquet \
+    data.val_files=data/kk/instruct/4ppl/test.parquet \
     data.train_batch_size=64 \
     data.val_batch_size=32 \
     data.max_prompt_length=400 \

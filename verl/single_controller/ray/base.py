@@ -240,6 +240,10 @@ class RayWorkerGroup(WorkerGroup):
                     'RAY_LOCAL_WORLD_SIZE': str(local_world_size),
                     'RAY_LOCAL_RANK': str(local_rank),
                 }
+                
+                os.environ["WG_PREFIX"] = self.name_prefix
+                os.environ["WG_BACKEND"] = "ray"
+                os.environ["RAY_LOCAL_WORLD_SIZE"] = str(local_world_size)
                 if rank != 0:
                     env_vars['MASTER_ADDR'] = self._master_addr
                     env_vars['MASTER_PORT'] = self._master_port
@@ -264,13 +268,14 @@ class RayWorkerGroup(WorkerGroup):
                 self._worker_names.append(name)
 
                 if rank == 0:
-                    register_center_actor = None
-                    for _ in range(120):
-                        if f"{self.name_prefix}_register_center" not in list_named_actors():
-                            time.sleep(1)
-                        else:
-                            register_center_actor = ray.get_actor(f"{self.name_prefix}_register_center")
-                            break
+                    register_center_actor = ray.get_actor(f"{self.name_prefix}_register_center")
+
+                    # for _ in range(120):
+                        # if f"{self.name_prefix}_register_center" not in list_named_actors():
+                        #     time.sleep(1)
+                        # else:
+                        #     register_center_actor = ray.get_actor(f"{self.name_prefix}_register_center")
+                        #     break
                     assert register_center_actor is not None, f"failed to get register_center_actor: {self.name_prefix}_register_center in {list_named_actors(all_namespaces=True)}"
                     rank_zero_info = ray.get(register_center_actor.get_rank_zero_info.remote())
                     self._master_addr, self._master_port = rank_zero_info['MASTER_ADDR'], rank_zero_info['MASTER_PORT']

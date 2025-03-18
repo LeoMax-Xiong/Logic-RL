@@ -92,11 +92,29 @@ class Worker(WorkerHelper):
 
         rank = os.environ.get("RANK", None)
         worker_group_prefix = os.environ.get("WG_PREFIX", None)
-
+        exist_worker = None
+        if worker_group_prefix:
+            worker_name = f"{worker_group_prefix}_register_center"
+            try:
+                import ray
+                from ray.util import list_named_actors
+                all_names = list_named_actors()
+                exist_worker = worker_name in all_names
+            except Exception as e:
+                print(f"没有找到: {exit_worker}")
+            
         # when decorator @ray.remote applies, __new__ will be called while we don't want to apply _configure_before_init
         if None not in [rank, worker_group_prefix] and 'ActorClass(' not in cls.__name__:
-            instance._configure_before_init(f"{worker_group_prefix}_register_center", int(rank))
-
+            try:
+                instance._configure_before_init(f"{worker_group_prefix}_register_center", int(rank))
+            except Exception as e:
+                print(f"注册发生了异常: {e}")
+        elif not exist_worker and worker_group_prefix:
+            # 调试模型下强制进行注册
+            try:
+                instance._configure_before_init(f"{worker_group_prefix}_register_center", int(rank))
+            except Exception as e:
+                print(f"注册发生了异常: {e}")
         return instance
 
     def _configure_before_init(self, register_center_name: str, rank: int):
@@ -113,6 +131,8 @@ class Worker(WorkerHelper):
                 from verl.single_controller.base.register_center.ray import create_worker_group_register_center
                 self.register_center = create_worker_group_register_center(name=register_center_name,
                                                                            info=rank_zero_info)
+
+                
 
             os.environ.update(rank_zero_info)
 
